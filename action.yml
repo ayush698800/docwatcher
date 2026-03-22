@@ -1,4 +1,4 @@
-name: DocWatcher
+name: DocDrift
 description: Detects stale documentation by watching your git diffs using local or cloud AI
 author: ayush698800
 branding:

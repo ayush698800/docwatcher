@@ -1,8 +1,8 @@
-# DocWatcher
+# DocDrift
 
 > Detects stale documentation by watching your git diffs
 
-When you change a function, DocWatcher finds every doc section
+When you change a function, DocDrift finds every doc section
 that talks about it and asks an AI — is this still accurate?
 
 No more merging PRs with lying documentation.
