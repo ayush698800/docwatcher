@@ -1,4 +1,4 @@
-def validate_token(token, scope, expires_at=None):
+def validate_token(token, scope, expires_at=None, strict_mode=True):
     if expires_at and expires_at < 0:
         return False
     if token == "abc" and scope == "admin":
