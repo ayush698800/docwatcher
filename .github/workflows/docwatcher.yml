@@ -1,7 +1,8 @@
-name: DocWatcher
+name: DocDrift
 on:
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   check-docs:
@@ -11,6 +12,7 @@ jobs:
         with:
           fetch-depth: 2
 
-      - uses: ayush698800/docwatcher@main
+      - name: DocDrift
+        uses: ayush698800/docwatcher@v0.1.0
         with:
           groq_api_key: ${{ secrets.GROQ_API_KEY }}
