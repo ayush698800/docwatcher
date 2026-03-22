@@ -1,5 +1,6 @@
 import click
 from rich.console import Console
+import sys
 from docwatcher.diff_parser import get_changed_files
 from docwatcher.symbol_extractor import get_changed_symbols
 from docwatcher.embeddings import build_index, search_docs, needs_reindex
@@ -11,6 +12,83 @@ console = Console()
 @click.group()
 def cli():
     pass
+
+@cli.command()
+@click.argument('repo_path', default='.')
+def precommit(repo_path):
+    console.print("\n[bold green]DocDrift[/bold green] pre-commit check...\n")
+
+    if needs_reindex(repo_path):
+        build_index(repo_path)
+
+    files = get_changed_files(repo_path)
+
+    if not files:
+        sys.exit(0)
+
+    all_symbols = []
+    for f in files:
+        symbols = get_changed_symbols(f.path, f.old_content, f.new_content)
+        all_symbols.extend(symbols)
+
+    if not all_symbols:
+        sys.exit(0)
+
+    llm_available = is_lm_studio_running(repo_path)
+
+    errors = []
+    warnings = []
+    undocumented = []
+
+    for symbol in all_symbols:
+        matches = search_docs(repo_path, symbol.name)
+
+        if not matches:
+            undocumented.append(symbol)
+            continue
+
+        if not llm_available:
+            continue
+
+        for match in matches:
+            verdict = check_consistency(
+                symbol_name=symbol.name,
+                old_code=symbol.old_code,
+                new_code=symbol.new_code,
+                doc_content=match['content'],
+                doc_file=match['source_file'],
+                doc_line=match['start_line'],
+                doc_heading=match['heading'],
+                repo_path=repo_path
+            )
+            if verdict and verdict.stale:
+                if verdict.severity == 'error':
+                    errors.append(verdict)
+                else:
+                    warnings.append(verdict)
+
+    if errors:
+        console.print(f"[bold red]DocDrift blocked this commit — {len(errors)} stale doc(s) found[/bold red]\n")
+        for v in errors:
+            console.print(f"[red]ERROR[/red] {v.symbol_name} — {v.doc_file} line {v.doc_line}")
+            console.print(f"  {v.reason}\n")
+        for s in undocumented:
+            console.print(f"[red]UNDOCUMENTED[/red] {s.name} — {s.file_path}\n")
+        console.print("[dim]Fix the docs above then commit again[/dim]")
+        console.print("[dim]Or run: git commit --no-verify to skip[/dim]")
+        sys.exit(1)
+
+    if warnings or undocumented:
+        console.print(f"[yellow]DocDrift warnings — {len(warnings)} warnings, {len(undocumented)} undocumented[/yellow]")
+        for v in warnings:
+            console.print(f"[yellow]WARNING[/yellow] {v.symbol_name} — {v.reason}")
+        for s in undocumented:
+            console.print(f"[yellow]UNDOCUMENTED[/yellow] {s.name} — {s.file_path}")
+        console.print("\n[dim]Commit allowed — fix warnings when you can[/dim]")
+        sys.exit(0)
+
+    console.print("[green]All docs look accurate — commit allowed[/green]")
+    sys.exit(0)
 
 @cli.command()
 @click.argument('repo_path', default='.')
