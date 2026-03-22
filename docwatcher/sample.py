@@ -8,4 +8,4 @@ class AuthService:
         return user == "admin"
     
 def refresh_token(token, expiry_days=30):
-    return token + "_refreshed"
+    return token + "_refres"

@@ -1,4 +1,5 @@
 import git
+import os
 from dataclasses import dataclass
 from typing import List
 
@@ -14,30 +15,26 @@ def get_changed_files(repo_path: str = '.') -> List[ChangedFile]:
 
     for item in repo.index.diff('HEAD'):
         try:
-            old = item.a_blob.data_stream.read().decode('utf-8', errors='ignore') if item.a_blob else ''
-            new = item.b_blob.data_stream.read().decode('utf-8', errors='ignore') if item.b_blob else ''
-            changed.append(ChangedFile(path=item.a_path, old_content=old, new_content=new))
-        except Exception:
-            continue
+            old = ''
+            new = ''
 
-    for item in repo.index.diff(None):
-        try:
-            old = item.a_blob.data_stream.read().decode('utf-8', errors='ignore') if item.a_blob else ''
-            new_path = f"{repo_path}/{item.b_path}"
+            # Read old content from HEAD commit directly
             try:
-                with open(new_path, 'r', errors='ignore') as f:
-                    new = f.read()
+                old = (repo.head.commit.tree / item.a_path).data_stream.read().decode('utf-8', errors='ignore')
             except Exception:
-                new = ''
-            changed.append(ChangedFile(path=item.b_path, old_content=old, new_content=new))
-        except Exception:
-            continue
+                old = ''
 
-    staged_new = [item for item in repo.index.diff('HEAD') if item.a_blob is None]
-    for item in staged_new:
-        try:
-            new = item.b_blob.data_stream.read().decode('utf-8', errors='ignore') if item.b_blob else ''
-            changed.append(ChangedFile(path=item.b_path, old_content='', new_content=new))
+            # Read new content from actual file on disk
+            full_path = os.path.join(repo_path, item.b_path or item.a_path)
+            if os.path.exists(full_path):
+                with open(full_path, 'r', errors='ignore') as f:
+                    new = f.read()
+
+            changed.append(ChangedFile(
+                path=item.b_path or item.a_path,
+                old_content=old,
+                new_content=new
+            ))
         except Exception:
             continue
 

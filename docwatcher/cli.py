@@ -40,24 +40,19 @@ def check(repo_path):
 
     console.print(f"[dim]Found {len(all_symbols)} changed symbol(s)[/dim]\n")
 
-    found_any_match = False
-
     for symbol in all_symbols:
         matches = search_docs(repo_path, symbol.name)
 
         if not matches:
+            console.print(f"[bold red]UNDOCUMENTED[/bold red] [cyan]{symbol.name}[/cyan] ([magenta]{symbol.symbol_type}[/magenta]) — [dim]{symbol.file_path}[/dim]")
+            console.print(f"  [dim]No documentation found for this symbol[/dim]\n")
             continue
 
-        found_any_match = True
-        console.print(f"[bold cyan]{symbol.name}[/bold cyan] ([magenta]{symbol.symbol_type}[/magenta]) — [dim]{symbol.file_path}[/dim]")
+        console.print(f"[bold yellow]DOC MATCH[/bold yellow] [cyan]{symbol.name}[/cyan] ([magenta]{symbol.symbol_type}[/magenta]) — [dim]{symbol.file_path}[/dim]")
 
         for match in matches:
             console.print(f"  [yellow]>[/yellow] [white]{match['source_file']}[/white] line [white]{match['start_line']}[/white] — section: [green]{match['heading']}[/green]")
             console.print(f"    [dim]{match['content'][:100]}...[/dim]")
             console.print(f"    [dim]relevance score: {match['distance']}[/dim]\n")
-
-    if not found_any_match:
-        console.print("[green]No documentation matches found for changed symbols[/green]")
-        console.print("[dim]Either no docs reference these symbols or index needs rebuilding[/dim]")
 if __name__ == '__main__':
     cli()
