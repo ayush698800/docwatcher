@@ -1,6 +1,9 @@
 name: DocWatcher
-description: Detects stale documentation by watching git diffs
+description: Detects stale documentation by watching your git diffs using local or cloud AI
 author: ayush698800
+branding:
+  icon: book-open
+  color: green
 
 inputs:
   groq_api_key:
