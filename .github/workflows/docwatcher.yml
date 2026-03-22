@@ -4,6 +4,11 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
 jobs:
   check-docs:
     runs-on: ubuntu-latest
