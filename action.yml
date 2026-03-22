@@ -1,0 +1,31 @@
+name: DocWatcher
+description: Detects stale documentation by watching git diffs
+author: ayush698800
+
+inputs:
+  groq_api_key:
+    description: Groq API key for LLM checks
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install DocWatcher
+      shell: bash
+      run: |
+        pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run DocWatcher
+      shell: bash
+      env:
+        GROQ_API_KEY: ${{ inputs.groq_api_key }}
+        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        python ${{ github.action_path }}/run_action.py

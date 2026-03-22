@@ -1,34 +1,33 @@
 # DocWatcher
 
-A tool that detects stale documentation by watching git diffs.
+Detects stale documentation by watching your git commits.
 
-## Installation
+When you change a function, DocWatcher finds every doc section 
+that talks about it and asks a local AI — is this still accurate?
 
-Install using pip:
+## Demo
 
-    pip install docwatcher
+[PUT YOUR GIF HERE]
 
-## validate_token
+## Install
 
-The validate_token function checks if a given token is valid.
-It takes a token string and returns True if valid, False otherwise.
+pip install docwatcher
 
-## AuthService
+## Usage
 
-The AuthService class handles all authentication logic.
-Use the login method to authenticate a user with username and password.
+docwatcher check
 
-## get_changed_files
+First run asks for your local AI endpoint once and remembers it.
+Works with LM Studio and Ollama.
 
-The get_changed_files function scans a git repository and returns
-a list of all files that have been modified since the last commit.
+## How it works
 
-## find_doc_files
+1. Watches git diff for changed functions and classes
+2. Finds related documentation using semantic search
+3. Asks a local LLM — is this doc still accurate?
+4. Reports stale docs with severity and exact reason
 
-The find_doc_files function crawls the repository looking for
-markdown and rst documentation files to scan.
+## Requirements
 
-## search_docs
-
-The search_docs function searches the documentation index
-for sections related to a given symbol name.
+- Python 3.11+
+- LM Studio or Ollama running locally

@@ -1,0 +1,16 @@
+name: DocWatcher
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - uses: ayush698800/docwatcher@main
+        with:
+          groq_api_key: ${{ secrets.GROQ_API_KEY }}

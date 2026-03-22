@@ -12,4 +12,4 @@ class AuthService:
     def login(self, user, password, mfa_code=None):
         if mfa_code is None:
             return False
-        return user == "ayush"
+        return user == "admin"
