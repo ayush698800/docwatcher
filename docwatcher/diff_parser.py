@@ -11,19 +11,34 @@ class ChangedFile:
 def get_changed_files(repo_path: str = '.') -> List[ChangedFile]:
     repo = git.Repo(repo_path)
     changed = []
-    
-    diffs = repo.index.diff('HEAD')
-    
-    for diff in diffs:
+
+    for item in repo.index.diff('HEAD'):
         try:
-            old = diff.a_blob.data_stream.read().decode('utf-8', errors='ignore') if diff.a_blob else ''
-            new = diff.b_blob.data_stream.read().decode('utf-8', errors='ignore') if diff.b_blob else ''
-            changed.append(ChangedFile(
-                path=diff.a_path,
-                old_content=old,
-                new_content=new
-            ))
+            old = item.a_blob.data_stream.read().decode('utf-8', errors='ignore') if item.a_blob else ''
+            new = item.b_blob.data_stream.read().decode('utf-8', errors='ignore') if item.b_blob else ''
+            changed.append(ChangedFile(path=item.a_path, old_content=old, new_content=new))
         except Exception:
             continue
-    
+
+    for item in repo.index.diff(None):
+        try:
+            old = item.a_blob.data_stream.read().decode('utf-8', errors='ignore') if item.a_blob else ''
+            new_path = f"{repo_path}/{item.b_path}"
+            try:
+                with open(new_path, 'r', errors='ignore') as f:
+                    new = f.read()
+            except Exception:
+                new = ''
+            changed.append(ChangedFile(path=item.b_path, old_content=old, new_content=new))
+        except Exception:
+            continue
+
+    staged_new = [item for item in repo.index.diff('HEAD') if item.a_blob is None]
+    for item in staged_new:
+        try:
+            new = item.b_blob.data_stream.read().decode('utf-8', errors='ignore') if item.b_blob else ''
+            changed.append(ChangedFile(path=item.b_path, old_content='', new_content=new))
+        except Exception:
+            continue
+
     return changed
