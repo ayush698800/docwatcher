@@ -1,4 +1,4 @@
-def validate_token(token, scope, expires_at=None, strict_mode=True, max_attempts=10):
+def validate_token(token, scope, expires_at=None, strict_mode=True, max_attempts=99):
     if max_attempts <= 0:
         return False
     if strict_mode and expires_at and expires_at < 0:

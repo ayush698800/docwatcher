@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: docdrift
+        name: DocDrift — check for stale docs
+        entry: C:/Users/micro/Desktop/projects/docwatcher/venv/Scripts/python.exe -m docwatcher.cli precommit
+        language: system
+        pass_filenames: false
