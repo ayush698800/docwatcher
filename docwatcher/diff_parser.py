@@ -9,32 +9,42 @@ class ChangedFile:
     old_content: str
     new_content: str
 
+def get_file_from_head(repo, path: str) -> str:
+    try:
+        return (repo.head.commit.tree / path).data_stream.read().decode('utf-8', errors='ignore')
+    except Exception:
+        return ''
+
 def get_changed_files(repo_path: str = '.') -> List[ChangedFile]:
     repo = git.Repo(repo_path)
     changed = []
+    seen_paths = set()
 
+    # Staged changes
     for item in repo.index.diff('HEAD'):
         try:
-            old = ''
-            new = ''
+            path = item.b_path or item.a_path
+            if path in seen_paths:
+                continue
+            seen_paths.add(path)
+            old = get_file_from_head(repo, item.a_path)
+            full_path = os.path.join(repo_path, path)
+            new = open(full_path, 'r', errors='ignore').read() if os.path.exists(full_path) else ''
+            changed.append(ChangedFile(path=path, old_content=old, new_content=new))
+        except Exception:
+            continue
 
-            # Read old content from HEAD commit directly
-            try:
-                old = (repo.head.commit.tree / item.a_path).data_stream.read().decode('utf-8', errors='ignore')
-            except Exception:
-                old = ''
-
-            # Read new content from actual file on disk
-            full_path = os.path.join(repo_path, item.b_path or item.a_path)
-            if os.path.exists(full_path):
-                with open(full_path, 'r', errors='ignore') as f:
-                    new = f.read()
-
-            changed.append(ChangedFile(
-                path=item.b_path or item.a_path,
-                old_content=old,
-                new_content=new
-            ))
+    # Unstaged changes — works without git add
+    for item in repo.index.diff(None):
+        try:
+            path = item.b_path or item.a_path
+            if path in seen_paths:
+                continue
+            seen_paths.add(path)
+            old = get_file_from_head(repo, item.a_path)
+            full_path = os.path.join(repo_path, path)
+            new = open(full_path, 'r', errors='ignore').read() if os.path.exists(full_path) else ''
+            changed.append(ChangedFile(path=path, old_content=old, new_content=new))
         except Exception:
             continue
 

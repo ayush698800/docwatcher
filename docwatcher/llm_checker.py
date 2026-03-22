@@ -1,10 +1,9 @@
 import json
+import re
 import requests
 from dataclasses import dataclass
 from typing import Optional
-
-LM_STUDIO_URL = "http://localhost:1234/v1/chat/completions"
-MODEL_NAME = "phi-3.5-mini-instruct"
+from docwatcher.config import get_config
 
 SYSTEM_PROMPT = """You are a documentation accuracy checker.
 You will be given a code change (old vs new) and a documentation section.
@@ -18,7 +17,7 @@ You must respond with ONLY a JSON object in this exact format:
 }
 
 Rules:
-- stale: true if the doc is now inaccurate or misleading because of the code change
+- stale: true if the doc is now inaccurate or misleading
 - stale: false if the doc is still accurate or unrelated to the change
 - severity error: doc is factually wrong and will mislead developers
 - severity warning: doc is partially outdated or incomplete
@@ -36,6 +35,33 @@ class LLMVerdict:
     doc_file: str
     doc_line: int
 
+def get_endpoint_and_model(repo_path: str):
+    config = get_config(repo_path)
+    endpoint = config.get('llm_endpoint', 'http://localhost:1234/v1/chat/completions')
+    model = config.get('model', 'auto')
+    
+    if model == 'auto':
+        base = endpoint.replace('/v1/chat/completions', '')
+        try:
+            r = requests.get(f"{base}/v1/models", timeout=3)
+            data = r.json()
+            models = data.get('data') or data.get('models') or []
+            if models:
+                model = models[0].get('id') or models[0].get('name', 'unknown')
+        except Exception:
+            model = 'unknown'
+    
+    return endpoint, model
+
+def is_lm_studio_running(repo_path: str = '.') -> bool:
+    try:
+        endpoint, _ = get_endpoint_and_model(repo_path)
+        base = endpoint.replace('/v1/chat/completions', '')
+        r = requests.get(f"{base}/v1/models", timeout=3)
+        return r.status_code == 200
+    except Exception:
+        return False
+
 def check_consistency(
     symbol_name: str,
     old_code: str,
@@ -43,10 +69,12 @@ def check_consistency(
     doc_content: str,
     doc_file: str,
     doc_line: int,
-    doc_heading: str
+    doc_heading: str,
+    repo_path: str = '.'
 ) -> Optional[LLMVerdict]:
 
-    old_display = old_code if old_code else "This is a new function — did not exist before"
+    endpoint, model = get_endpoint_and_model(repo_path)
+    old_display = old_code if old_code else "New function — did not exist before"
 
     user_message = f"""Symbol changed: {symbol_name}
 
@@ -63,9 +91,9 @@ Is this documentation still accurate after the code change?"""
 
     try:
         response = requests.post(
-            LM_STUDIO_URL,
+            endpoint,
             json={
-                "model": MODEL_NAME,
+                "model": model,
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_message}
@@ -81,7 +109,6 @@ Is this documentation still accurate after the code change?"""
         try:
             verdict_data = json.loads(raw)
         except json.JSONDecodeError:
-            import re
             match = re.search(r'\{.*\}', raw, re.DOTALL)
             if match:
                 verdict_data = json.loads(match.group())
@@ -98,5 +125,5 @@ Is this documentation still accurate after the code change?"""
             doc_line=doc_line
         )
 
-    except Exception as e:
+    except Exception:
         return None
