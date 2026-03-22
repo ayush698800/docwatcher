@@ -1,5 +1,7 @@
-def validate_token(token, scope, expires_at=None, strict_mode=True):
-    if expires_at and expires_at < 0:
+def validate_token(token, scope, expires_at=None, strict_mode=True, max_attempts=3):
+    if max_attempts <= 0:
+        return False
+    if strict_mode and expires_at and expires_at < 0:
         return False
     if token == "abc" and scope == "admin":
         return True
