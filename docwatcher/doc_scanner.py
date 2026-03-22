@@ -12,13 +12,16 @@ class DocChunk:
 def find_doc_files(repo_path: str) -> List[str]:
     doc_files = []
     
-    extensions = ['.md', '.rst', '.txt']
-    skip_folders = ['venv', '.git', '__pycache__', 'node_modules']
+    extensions = ['.md', '.rst']
+    skip_folders = ['venv', '.git', '__pycache__', 'node_modules', '.docwatcher']
+    skip_files = ['requirements.txt', 'requirements-dev.txt', 'MANIFEST.in']
     
     for root, dirs, files in os.walk(repo_path):
         dirs[:] = [d for d in dirs if d not in skip_folders]
         
         for file in files:
+            if file in skip_files:
+                continue
             if any(file.endswith(ext) for ext in extensions):
                 full_path = os.path.join(root, file)
                 doc_files.append(full_path)

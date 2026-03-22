@@ -21,8 +21,7 @@ def index(repo_path):
 @cli.command()
 @click.argument('repo_path', default='.')
 def check(repo_path):
-    console.print("[bold green]DocWatcher[/bold green] starting...")
-    console.print(f"Scanning repo at: [cyan]{repo_path}[/cyan]")
+    console.print("\n[bold green]DocWatcher[/bold green] scanning...\n")
 
     files = get_changed_files(repo_path)
 
@@ -36,20 +35,29 @@ def check(repo_path):
         all_symbols.extend(symbols)
 
     if not all_symbols:
-        console.print(f"[yellow]Found {len(files)} changed file(s) but no trackable symbols[/yellow]")
+        console.print("[yellow]No trackable symbols found in changed files[/yellow]")
         return
 
-    console.print(f"[green]Found {len(all_symbols)} changed symbol(s) — searching docs...[/green]\n")
+    console.print(f"[dim]Found {len(all_symbols)} changed symbol(s)[/dim]\n")
+
+    found_any_match = False
 
     for symbol in all_symbols:
         matches = search_docs(repo_path, symbol.name)
-        
-        if matches:
-            console.print(f"[bold cyan]{symbol.name}[/bold cyan] ([magenta]{symbol.symbol_type}[/magenta]) in [green]{symbol.file_path}[/green]")
-            for match in matches:
-                console.print(f"  [yellow]Doc match:[/yellow] {match['source_file']} line {match['start_line']}")
-                console.print(f"  [dim]Section: {match['heading']}[/dim]")
-                console.print(f"  [dim]{match['content'][:120]}...[/dim]\n")
 
+        if not matches:
+            continue
+
+        found_any_match = True
+        console.print(f"[bold cyan]{symbol.name}[/bold cyan] ([magenta]{symbol.symbol_type}[/magenta]) — [dim]{symbol.file_path}[/dim]")
+
+        for match in matches:
+            console.print(f"  [yellow]>[/yellow] [white]{match['source_file']}[/white] line [white]{match['start_line']}[/white] — section: [green]{match['heading']}[/green]")
+            console.print(f"    [dim]{match['content'][:100]}...[/dim]")
+            console.print(f"    [dim]relevance score: {match['distance']}[/dim]\n")
+
+    if not found_any_match:
+        console.print("[green]No documentation matches found for changed symbols[/green]")
+        console.print("[dim]Either no docs reference these symbols or index needs rebuilding[/dim]")
 if __name__ == '__main__':
     cli()
