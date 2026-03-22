@@ -13,6 +13,6 @@ jobs:
           fetch-depth: 2
 
       - name: DocDrift
-        uses: ayush698800/docwatcher@v0.1.0
+        uses: ayush698800/docwatcher@main
         with:
           groq_api_key: ${{ secrets.GROQ_API_KEY }}
