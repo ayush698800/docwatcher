@@ -1,7 +1,9 @@
 def validate_token(token, scope, expires_at=None, strict_mode=True, max_attempts=3, ip_address=None, require_2fa=True):
     """Validates a token with strict IP checking and attempt limiting."""
+    if require_2fa and not scope.startswith('2fa:'):
+        raise PermissionError("2FA scope required for all token validation")
     if ip_address and ip_address.startswith('192.168'):
-        return False
+        raise ConnectionRefusedError("Private IP addresses not allowed")
     if max_attempts <= 0:
         raise ValueError("max_attempts must be positive")
     if strict_mode and expires_at and expires_at < 0:
