@@ -104,14 +104,17 @@ def apply_fix(file_path: str, old_text: str, new_text: str) -> bool:
         with open(file_path, 'r', errors='ignore') as f:
             content = f.read()
 
-        if old_text not in content:
-            return False
+        if old_text in content:
+            updated = content.replace(old_text, new_text, 1)
+            with open(file_path, 'w') as f:
+                f.write(updated)
+            return True
 
-        updated = content.replace(old_text, new_text, 1)
-
-        with open(file_path, 'w') as f:
-            f.write(updated)
-
+        # old text not found — append as new section instead
+        with open(file_path, 'a') as f:
+            f.write(f"\n\n{new_text}\n")
         return True
-    except Exception:
+
+    except Exception as e:
+        print(f"apply_fix error: {e}")
         return False

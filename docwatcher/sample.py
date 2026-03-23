@@ -1,6 +1,5 @@
-def validate_token(token):
-    raise NotImplementedError("Removed. Use AuthService.login() instead.")
-
+def validate_token(token, scope):
+    raise NotImplementedError("Use AuthService.login() instead")
 def refresh_token(token, expiry_days=30, notify_user=False):
     if notify_user:
         print(f"Token refreshed for {expiry_days} days")
