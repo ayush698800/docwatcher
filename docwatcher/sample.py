@@ -1,4 +1,4 @@
-def validate_token(token, scope, expires_at=None, strict_mode=True, max_attempts=3, ip_address=None):
+def validate_token(token, scope, expires_at=None, strict_mode=True, max_attempts=3, ip_address=None, require_2fa=True):
     """Validates a token with strict IP checking and attempt limiting."""
     if ip_address and ip_address.startswith('192.168'):
         return False
