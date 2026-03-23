@@ -1,62 +1,96 @@
-# DocDrift
+# 🚀 DocDrift
 
-> Finds stale documentation and fixes it automatically
+> ⚡ Your docs should never lie again.
 
-You change a function. DocDrift finds every doc section that is now
-lying because of that change — and fixes it with one keypress.
+DocDrift finds stale documentation in your codebase **before you commit** — and fixes it automatically using AI.
 
-No more merging PRs with outdated documentation. No more new developers
-wasting hours following instructions that stopped being true months ago.
-
----
-
-## The problem
-
-You change a function. You forget to update the docs.
-Now your README is lying. A new developer follows it and wastes 3 hours.
-This happens everywhere, all the time. Nobody has a good solution.
-
-Until now.
+No more outdated READMEs.
+No more confused developers.
+No more wasting hours debugging *wrong documentation*.
 
 ---
 
-## Demo
-```
+## 😤 The Problem
+
+You change a function.
+You forget to update the docs.
+
+Now your README is lying.
+
+A new developer follows it → wastes 3 hours → blames the project.
+
+This happens **everywhere**.
+
+> And nobody really fixes it.
+
+---
+
+## 💡 The Solution
+
+**DocDrift hooks into your workflow and fixes documentation drift instantly.**
+
+* Detects changed functions/classes
+* Finds related documentation
+* Checks if it's still correct
+* Fixes it using AI
+* Updates everything before commit
+
+All in **one command**.
+
+---
+
+## ⚡ Demo
+
+```bash
 $ git add .
 $ ./docdrift commit
+```
 
+```bash
 DocDrift scanning before commit...
+
 Found 1 errors · 0 warnings · 2 undocumented
 
 ERROR validate_token
-  README.md line 7
-  Function now raises NotImplementedError but docs say it returns True/False
+README.md line 7
+Function now raises NotImplementedError but docs say it returns True/False
 
-  Fix this? (y/n): y
-  Generating fix...
+Fix this? (y/n): y
 
-  Suggested:
-  The validate_token function validates a token and scope.
-  Raises NotImplementedError if validation has been removed.
-  Use AuthService.login() instead.
+Generating fix...
 
-  Apply? (y/n/e to edit): y
-  Fixed
+Suggested:
+The validate_token function validates a token and scope.
+Raises NotImplementedError if validation has been removed.
+Use AuthService.login() instead.
+
+Apply? (y/n/e): y
+✔ Fixed
 
 2 undocumented symbols found
 Auto-document all in README? (y/n): y
-  Generated docs for refresh_token
-  Generated docs for AuthService
-  Added 2 new sections to README
+✔ Generated docs
 
 Commit now? (y/n): y
-Commit message: refactor auth flow
-Committed
+✔ Committed
 ```
 
 ---
 
-## Install
+## ✨ Features
+
+* 🔍 Detects stale or incorrect documentation
+* 🤖 AI-generated fixes (interactive or automatic)
+* ⚡ Runs before every commit (git hook)
+* 📄 Auto-generates missing documentation
+* 🔗 Works with README, docs folders & comments
+* 🧠 Semantic search for accurate doc matching
+* 🔐 Supports local AI (privacy-friendly)
+
+---
+
+## 🛠️ Installation
+
 ```bash
 git clone https://github.com/ayush698800/docwatcher.git
 cd docwatcher
@@ -64,54 +98,58 @@ pip install -r requirements.txt
 bash install-hook.sh
 ```
 
-Set your free Groq API key for cloud AI:
+### 🔑 Set API Key (Optional - Cloud AI)
+
 ```bash
 export GROQ_API_KEY="your_key_here"
 ```
 
-Get a free key at groq.com — takes 2 minutes.
+👉 Get a free key at https://groq.com (takes ~2 minutes)
 
-Or use LM Studio or Ollama for fully local, private AI — no API key needed.
+**OR**
+
+Run fully locally using:
+
+* LM Studio
+* Ollama
+
+No API key needed 🔒
 
 ---
 
-## Usage
+## 🚀 Usage
 
-### Smart commit — the main command
+### Smart Commit (Main Command)
+
 ```bash
 git add .
 ./docdrift commit
 ```
 
-DocDrift will:
-- Scan all changed functions and classes
-- Find documentation that is now stale or wrong
-- Show each finding with exact file and line number
-- Ask if you want to fix it — AI generates the updated doc
-- Auto-document any new undocumented functions
-- Commit everything when you approve
+### Check Only
 
-### Check only — no commit
 ```bash
 ./docdrift check
 ```
 
-### Rebuild doc index
+### Rebuild Index
+
 ```bash
 ./docdrift index
 ```
 
 ---
 
-## GitHub Actions — automatic PR checks
+## 🤖 GitHub Actions (Auto PR Checks)
 
-Add `.github/workflows/docdrift.yml` to any repo:
+Add this workflow:
+
 ```yaml
 name: DocDrift
+
 on:
   pull_request:
     branches: [main, master]
-  workflow_dispatch:
 
 jobs:
   check-docs:
@@ -121,80 +159,99 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: DocDrift
+      - name: Run DocDrift
         uses: ayush698800/docwatcher@v2.0.0
         with:
           groq_api_key: ${{ secrets.GROQ_API_KEY }}
 ```
 
-Add `GROQ_API_KEY` to your repo secrets once.
-Now every PR gets automatically checked for stale docs and posts findings as a comment.
+Now every PR gets checked automatically 🔥
 
 ---
 
-## Pre-commit hook
+## 🔗 Pre-Commit Hook
 
-DocDrift installs as a git hook that runs automatically before every commit:
 ```bash
 bash install-hook.sh
 ```
 
-Now every time you commit a Python or JS file, DocDrift checks automatically.
-Blocks commits with ERROR-level stale docs.
-Allows commits with warnings so you are never fully blocked.
+* ❌ Blocks commits with critical doc errors
+* ⚠️ Allows warnings (no workflow disruption)
 
-Skip when needed:
+Skip if needed:
+
 ```bash
-git commit --no-verify -m "your message"
+git commit --no-verify -m "message"
 ```
 
 ---
 
-## How it works
+## ⚙️ How It Works
+
 ```
-git diff → changed functions and classes detected via Tree-sitter
-       ↓
-semantic search → finds related documentation sections
-       ↓  
-LLM check → is this doc still accurate after the code change?
-       ↓
-if stale → generates fix → asks permission → applies to file
-       ↓
-if undocumented → generates new docs → appends to README
+git diff
+   ↓
+Detect changed functions (Tree-sitter)
+   ↓
+Find related docs (semantic search)
+   ↓
+AI checks accuracy
+   ↓
+Fix or generate docs
+   ↓
+Apply + commit
 ```
 
 ---
 
-## What it finds
+## 🧠 What It Detects
 
-- Functions that changed signature but docs describe the old one
-- Functions that now raise exceptions but docs say they return values
-- New parameters that are not mentioned anywhere in docs
-- Completely undocumented new functions and classes
-- Removed functionality still described as available
-
----
-
-## Works with
-
-- Python and JavaScript codebases
-- Markdown and RST documentation
-- README files, /docs folders, inline comments
-- GitHub Actions for automatic team-wide PR checks
-- LM Studio and Ollama — fully local and private
-- Groq — free cloud AI, instant responses
+* Changed function signatures with outdated docs
+* Incorrect return values / exceptions
+* Missing parameters in documentation
+* Undocumented functions/classes
+* Removed features still described
 
 ---
 
-## Built with
+## 🌍 Supported Stack
 
-- Tree-sitter — code parsing across languages
-- sentence-transformers — semantic documentation search
-- ChromaDB — local vector index
-- Groq / LM Studio / Ollama — LLM verdicts and fixes
+* Python & JavaScript
+* Markdown & RST
+* README + /docs + inline comments
 
 ---
 
-## License
+## 🏗️ Built With
+
+* Tree-sitter
+* sentence-transformers
+* ChromaDB
+* Groq / Ollama / LM Studio
+
+---
+
+## 📜 License
 
 MIT
+
+---
+
+## ⭐ Why This Matters
+
+> Bad documentation kills good projects.
+
+DocDrift makes sure your documentation stays as reliable as your code.
+
+---
+
+## 🙌 Contribute
+
+PRs, ideas, and feedback are welcome!
+Let's make documentation actually trustworthy.
+
+---
+
+## ⭐ Star This Repo
+
+If this saved you even one hour — give it a star ⭐
