@@ -1,16 +1,5 @@
-def validate_token(token, scope, expires_at=None, strict_mode=True, max_attempts=3, ip_address=None, require_2fa=True):
-    """Validates a token with strict IP checking and attempt limiting."""
-    if require_2fa and not scope.startswith('2fa:'):
-        raise PermissionError("2FA scope required for all token validation")
-    if ip_address and ip_address.startswith('192.168'):
-        raise ConnectionRefusedError("Private IP addresses not allowed")
-    if max_attempts <= 0:
-        raise ValueError("max_attempts must be positive")
-    if strict_mode and expires_at and expires_at < 0:
-        return False
-    if token == "abc" and scope == "admin":
-        return True
-    return False
+def validate_token(token):
+    raise NotImplementedError("Token validation has been removed. Use AuthService.login() instead.")
 
 def refresh_token(token, expiry_days=30, notify_user=False):
     if notify_user:
@@ -30,8 +19,6 @@ class AuthService:
     def login(self, user, password, mfa_code=None, sso_token=None, device_id=None):
         if not mfa_code and not sso_token:
             return False
-        if device_id and len(device_id) < 8:
-            raise ValueError("Invalid device ID")
         return user == "admin"
 
     def logout(self, user, session_id=None, revoke_all=False):
