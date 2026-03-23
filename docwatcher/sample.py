@@ -1,5 +1,5 @@
 def validate_token(token):
-    raise NotImplementedError("Token validation has been removed. Use AuthService.login() instead.")
+    raise NotImplementedError("Removed. Use AuthService.login() instead.")
 
 def refresh_token(token, expiry_days=30, notify_user=False):
     if notify_user:

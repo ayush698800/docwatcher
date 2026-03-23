@@ -3,11 +3,25 @@ import os
 from dataclasses import dataclass
 from typing import List
 
+SKIP_PATTERNS = [
+    '.docwatcher',
+    '__pycache__',
+    '.pyc',
+    '.bin',
+    '.sqlite3',
+    'venv/',
+    '.git/',
+    'node_modules/'
+]
+
 @dataclass
 class ChangedFile:
     path: str
     old_content: str
     new_content: str
+
+def should_skip(path: str) -> bool:
+    return any(pattern in path for pattern in SKIP_PATTERNS)
 
 def get_file_from_head(repo, path: str) -> str:
     try:
@@ -20,11 +34,10 @@ def get_changed_files(repo_path: str = '.') -> List[ChangedFile]:
     changed = []
     seen_paths = set()
 
-    # Staged changes
     for item in repo.index.diff('HEAD'):
         try:
             path = item.b_path or item.a_path
-            if path in seen_paths:
+            if path in seen_paths or should_skip(path):
                 continue
             seen_paths.add(path)
             old = get_file_from_head(repo, item.a_path)
@@ -34,11 +47,10 @@ def get_changed_files(repo_path: str = '.') -> List[ChangedFile]:
         except Exception:
             continue
 
-    # Unstaged changes — works without git add
     for item in repo.index.diff(None):
         try:
             path = item.b_path or item.a_path
-            if path in seen_paths:
+            if path in seen_paths or should_skip(path):
                 continue
             seen_paths.add(path)
             old = get_file_from_head(repo, item.a_path)

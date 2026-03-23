@@ -48,7 +48,7 @@ def parse_verdict(raw: str) -> Optional[dict]:
                 return None
     return None
 
-def check_with_groq(messages: list, model: str = "llama3-8b-8192") -> Optional[str]:
+def check_with_groq(messages: list, model: str = "llama-3.1-8b-instant") -> Optional[str]:
     api_key = os.environ.get('GROQ_API_KEY', '')
     if not api_key:
         return None
