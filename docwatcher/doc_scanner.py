@@ -13,7 +13,7 @@ def find_doc_files(repo_path: str) -> List[str]:
     doc_files = []
     
     extensions = ['.md', '.rst']
-    skip_folders = ['venv', '.git', '__pycache__', 'node_modules', '.docwatcher']
+    skip_folders = ['venv', '.git', '__pycache__', 'node_modules', '.docdrift', '.docwatcher']
     skip_files = ['requirements.txt', 'requirements-dev.txt', 'MANIFEST.in']
     
     for root, dirs, files in os.walk(repo_path):

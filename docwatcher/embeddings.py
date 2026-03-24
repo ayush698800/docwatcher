@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # Shared model — loaded once at import time
 _model = SentenceTransformer('all-MiniLM-L6-v2')
 
-DB_SUBDIR   = '.docwatcher/db'
+DB_SUBDIR   = '.docdrift/db'
 MARKER_FILE = 'last_indexed'
 COLLECTION  = 'docs'
 MAX_DISTANCE = 1.2   # Cosine distance above this = irrelevant result, skip it
@@ -55,7 +55,7 @@ def get_index_age(repo_path: str) -> float:
 
 def get_docs_age(repo_path: str) -> float:
     newest = 0.0
-    skip = {'venv', '.git', '__pycache__', '.docwatcher'}
+    skip = {'venv', '.git', '__pycache__', '.docdrift', '.docwatcher'}
     for root, dirs, files in os.walk(repo_path):
         dirs[:] = [d for d in dirs if d not in skip]
         for f in files:

@@ -8,7 +8,7 @@ branding:
 inputs:
   groq_api_key:
     description: Groq API key for LLM checks
-    required: true
+    required: false
 
 runs:
   using: composite
@@ -18,12 +18,13 @@ runs:
       with:
         python-version: '3.11'
 
-    - name: Install DocWatcher
+    - name: Install DocDrift
       shell: bash
       run: |
-        pip install -r ${{ github.action_path }}/requirements.txt
+        python -m pip install --upgrade pip
+        python -m pip install ${{ github.action_path }}
 
-    - name: Run DocWatcher
+    - name: Run DocDrift
       shell: bash
       env:
         GROQ_API_KEY: ${{ inputs.groq_api_key }}

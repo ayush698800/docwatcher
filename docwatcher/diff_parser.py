@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 SKIP_PATTERNS = [
+    '.docdrift',
     '.docwatcher',
     '__pycache__',
     '.pyc',

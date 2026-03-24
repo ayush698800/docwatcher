@@ -9,10 +9,10 @@ from rich.table import Table
 
 from docwatcher.config import is_configured, setup_config
 from docwatcher.diff_parser import get_changed_files
+from docwatcher.engine import analyze_repo
 from docwatcher.embeddings import build_index, needs_reindex, search_docs
 from docwatcher.fixer import apply_fix, generate_fix
-from docwatcher.llm_checker import check_consistency, is_lm_studio_running
-from docwatcher.symbol_extractor import get_changed_symbols
+from docwatcher.llm_checker import is_lm_studio_running
 
 console = Console()
 
@@ -53,45 +53,6 @@ def _print_fix_preview(suggested: str):
     console.print(Panel(suggested, title="Suggested Fix", border_style="green"))
 
 
-def _collect_findings(repo_path, symbols, llm_available):
-    errors = []
-    warnings = []
-    infos = []
-    undocumented = []
-
-    for symbol in symbols:
-        matches = search_docs(repo_path, symbol.name)
-        if not matches:
-            undocumented.append(symbol)
-            continue
-
-        if not llm_available:
-            infos.append((None, symbol, matches))
-            continue
-
-        for match in matches:
-            verdict = check_consistency(
-                symbol_name=symbol.name,
-                old_code=symbol.old_code,
-                new_code=symbol.new_code,
-                doc_content=match["content"],
-                doc_file=match["source_file"],
-                doc_line=match["start_line"],
-                doc_heading=match["heading"],
-                repo_path=repo_path,
-            )
-            if not verdict or not verdict.stale:
-                continue
-            if verdict.severity == "error":
-                errors.append((verdict, symbol))
-            elif verdict.severity == "warning":
-                warnings.append((verdict, symbol))
-            else:
-                infos.append((verdict, symbol, matches))
-
-    return errors, warnings, infos, undocumented
-
-
 @click.group()
 def cli():
     pass
@@ -109,21 +70,16 @@ def precommit(repo_path):
     if not files:
         sys.exit(0)
 
-    all_symbols = []
-    for changed_file in files:
-        all_symbols.extend(
-            get_changed_symbols(
-                changed_file.path,
-                changed_file.old_content,
-                changed_file.new_content,
-            )
-        )
+    analysis = analyze_repo(repo_path)
+    all_symbols = analysis.changed_symbols
 
     if not all_symbols:
         sys.exit(0)
 
-    llm_available = is_lm_studio_running(repo_path)
-    errors, warnings, _, undocumented = _collect_findings(repo_path, all_symbols, llm_available)
+    llm_available = analysis.llm_available
+    errors = analysis.errors
+    warnings = analysis.warnings
+    undocumented = analysis.undocumented
 
     if errors:
         console.print(
@@ -176,26 +132,19 @@ def commit(message, repo_path):
     if needs_reindex(repo_path):
         build_index(repo_path)
 
-    files = get_changed_files(repo_path)
-    if not files:
+    if not get_changed_files(repo_path):
         console.print("[yellow]No changed files found - stage files first with git add[/yellow]")
         return
 
-    all_symbols = []
-    for changed_file in files:
-        all_symbols.extend(
-            get_changed_symbols(
-                changed_file.path,
-                changed_file.old_content,
-                changed_file.new_content,
-            )
-        )
+    analysis = analyze_repo(repo_path)
+    files = analysis.changed_files
+    all_symbols = analysis.changed_symbols
 
     if not all_symbols:
         console.print("[yellow]No changed functions or classes found in staged files[/yellow]")
         return
 
-    llm_available = is_lm_studio_running(repo_path)
+    llm_available = analysis.llm_available
     _print_commit_banner(files, all_symbols, llm_available)
 
     if not llm_available:
@@ -203,7 +152,9 @@ def commit(message, repo_path):
             "[yellow]AI is not available, so DocDrift can only surface undocumented symbols right now[/yellow]\n"
         )
 
-    errors, warnings, _, undocumented = _collect_findings(repo_path, all_symbols, llm_available)
+    errors = analysis.errors
+    warnings = analysis.warnings
+    undocumented = analysis.undocumented
     total = len(errors) + len(warnings) + len(undocumented)
     fixed_count = 0
     generated_count = 0
@@ -369,9 +320,13 @@ def check(repo_path, no_llm):
 
     console.print(f"[dim]Found {len(all_symbols)} changed symbol(s)[/dim]\n")
 
-    errors, warnings, infos, undocumented = _collect_findings(repo_path, all_symbols, llm_available and not no_llm)
+    analysis = analyze_repo(repo_path, use_llm=not no_llm)
+    errors = analysis.errors
+    warnings = analysis.warnings
+    infos = analysis.infos
+    undocumented = analysis.undocumented
 
-    if not llm_available or no_llm:
+    if not analysis.llm_available or no_llm:
         for _verdict, symbol, matches in infos:
             console.print(f"[bold yellow]DOC MATCH[/bold yellow] [cyan]{symbol.name}[/cyan] - [dim]{symbol.file_path}[/dim]")
             for match in matches:
