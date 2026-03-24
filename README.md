@@ -1,4 +1,4 @@
-# 🚀 DocDrift
+## 🚀 DocDrift
 
 ⚡ **Your docs should never lie again.**
 
@@ -31,6 +31,7 @@ DocDrift hooks into your workflow and fixes documentation drift instantly.
 
 All in one command.
 
+![ScreenRecording2026-03-23213053-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/33c37392-68d9-4f68-9cbe-ac914f14f78f)
 ---
 
 ## ⚡ Demo
@@ -68,6 +69,7 @@ Commit now? (y/n): y
 Commit message: refactor auth flow
 ✔ Committed
 ```
+![ScreenRecording2026-03-23213400-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/fbc671bb-debe-4fdc-8f67-eea5515af4e7)
 
 ---
 
