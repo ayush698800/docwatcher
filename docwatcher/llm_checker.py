@@ -32,7 +32,8 @@ class LLMVerdict:
     severity: str
     reason: str
     symbol_name: str
-    doc_section: str
+    doc_heading: str
+    doc_content: str
     doc_file: str
     doc_line: int
 
@@ -158,7 +159,8 @@ Is this documentation still accurate after the code change?"""
         severity=verdict_data.get("severity", "info"),
         reason=verdict_data.get("reason", "No reason provided"),
         symbol_name=symbol_name,
-        doc_section=doc_heading,
+        doc_heading=doc_heading,
+        doc_content=doc_content,
         doc_file=doc_file,
         doc_line=doc_line
     )
