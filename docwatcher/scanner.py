@@ -8,6 +8,28 @@ import logging
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests as req
+import sys
+
+def main():
+    # Check if a URL was passed as an argument
+    # Usage: python scanner.py https://github.com/user/repo
+    if len(sys.argv) > 1:
+        repo_url = sys.argv[1]
+        repo_name = "/".join(repo_url.split("/")[-2:]) # Extracts 'user/repo'
+        
+        console.print(f"[bold green]🎯 Sniping Repo: {repo_name}[/bold green]")
+        
+        # Manually create the repo dict the script expects
+        target_repo = {
+            "full_name": repo_name,
+            "stars": 0, # We don't care about stars for a manual snipe
+            "url": repo_url,
+            "default_branch": "main" 
+        }
+        
+        result = audit_single_repo(target_repo)
+        console.print(result)
+        return
 
 # Rich for Pro-Level Terminal UI
 from rich.console import Console
