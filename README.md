@@ -1,88 +1,122 @@
+
 # DocDrift
 
-DocDrift keeps code and docs in sync before you commit.
+Catch stale docs before they reach `main`.
 
-It scans your staged git diff, finds the functions and classes you changed, looks up the related documentation, and flags docs that are now wrong, incomplete, or missing.
+DocDrift checks the code you changed against your README, docs, and examples, then flags documentation that is now wrong, incomplete, or missing.
 
-## Why it exists
+## Why DocDrift
 
-Most documentation does not fail loudly. It just drifts.
+Documentation usually does not break loudly. It just drifts.
 
-You rename a parameter, change a return value, or start raising a new exception. The code is correct, but the README still teaches the old behavior. DocDrift catches that gap before it ships.
+You rename a parameter, change a return value, remove a feature, or start raising a new exception. The code is correct, but the docs still teach the old behavior.
 
-## What it does
+DocDrift catches that gap before you commit or merge.
+
+## What It Does
 
 - Detects changed functions and classes from staged git diffs
 - Finds related Markdown and RST docs with semantic search
 - Uses AI to check whether the docs still match the code
 - Suggests updated documentation and applies fixes interactively
 - Flags undocumented new symbols
-- Runs locally in the CLI and in GitHub Actions with the same analysis path
+- Runs locally in the CLI and in GitHub Actions
 
-## Demo
+## Install
+
+```bash
+pip install docdrift
+```
+
+## Quick Start
+
+From inside your git repository:
 
 ```bash
 git add .
-python -m pip install -e .
 docdrift commit
 ```
 
-Example flow:
+That will:
+- scan your staged code changes
+- find related docs
+- flag stale or missing documentation
+- offer fixes interactively
+- let you commit after review
+
+## AI Setup
+
+For full documentation checks and autofixes, DocDrift needs an AI backend.
+
+You have 2 options:
+
+### Option 1: Groq
+
+This is the easiest setup.
+
+Set your API key:
+
+```bash
+export GROQ_API_KEY="your_key_here"
+```
+
+Then run:
+
+```bash
+git add .
+docdrift commit
+```
+
+### Option 2: Local / Private AI
+
+If you do not want to use a cloud API, you can use a local OpenAI-compatible endpoint such as:
+
+- LM Studio
+- Ollama-compatible OpenAI endpoint
+
+On first run, DocDrift will ask for your endpoint and save it to:
+
+```text
+.docdrift/config.json
+```
+
+Common endpoints:
+
+- LM Studio: `http://localhost:1234/v1/chat/completions`
+- Ollama-compatible endpoint: `http://localhost:11434/v1/chat/completions`
+
+## What Happens Without AI?
+
+If you do not set `GROQ_API_KEY` and do not configure a local endpoint, DocDrift cannot run full AI consistency checks or generate fixes.
+
+To get the real stale-doc detection and autofix workflow, you need one of:
+- `GROQ_API_KEY`
+- a local AI endpoint
+
+## Example
+
+```bash
+git add .
+docdrift commit
+```
 
 ```text
 DocDrift scanning before commit...
 
-+-----------------------------------------------+
-| DocDrift Commit                               |
-| 2 staged file(s)  3 changed symbol(s)  ready  |
-+-----------------------------------------------+
+Found 1 errors · 0 warnings · 1 undocumented
 
-Found 1 errors · 1 warnings · 1 undocumented
+ERROR validate_token
+Docs: README.md:42
+Docs still say the function returns bool,
+but the code now raises InvalidTokenError.
 
-+-----------------------------------------------+
-| ERROR                                         |
-| validate_token in auth/service.py             |
-| Docs: README.md:42 (Authentication)           |
-| Docs still promise True/False, but the code   |
-| now raises InvalidTokenError on failure.      |
-+-----------------------------------------------+
+Fix this? (y/n): y
+Generating fix...
+README.md updated
 
-  Fix this? (y/n): y
-  Generating fix...
-
-+-----------------------------------------------+
-| Suggested Fix                                 |
-| validate_token validates a token and raises   |
-| InvalidTokenError when the token is rejected. |
-+-----------------------------------------------+
-
-  Apply? (y/n/e to edit): y
-  Fixed
+Commit now? (y/n): y
+Committed
 ```
-
-## Installation
-
-Install from source:
-
-```bash
-python -m pip install -e .
-```
-
-Or run directly from this checkout:
-
-```bash
-./docdrift commit
-```
-
-## Configuration
-
-DocDrift works with:
-
-- Groq via `GROQ_API_KEY`
-- LM Studio compatible OpenAI-style endpoints
-- Ollama compatible OpenAI-style endpoints
-
-On first run, `docdrift commit` will prompt for a local endpoint if no config exists. The config is saved to `.docdrift/config.json`.
 
 ## CLI
 
@@ -104,9 +138,15 @@ Rebuild the documentation index:
 docdrift index
 ```
 
+Run the pre-commit safety check manually:
+
+```bash
+docdrift precommit
+```
+
 ## GitHub Actions
 
-Add this workflow:
+Add this workflow to your repo:
 
 ```yaml
 name: DocDrift
@@ -123,14 +163,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./
+      - uses: ayush698800/docwatcher@v2.1.0
         with:
           groq_api_key: ${{ secrets.GROQ_API_KEY }}
 ```
 
-The GitHub Action uses the same analysis engine as the CLI, so local checks and PR comments stay aligned.
+This runs the same core detection logic in PRs that you use locally in the CLI.
 
-## Pre-commit hook
+## Pre-commit Hook
 
 Install the built-in git hook:
 
@@ -138,9 +178,21 @@ Install the built-in git hook:
 bash install-hook.sh
 ```
 
-Or use the included `.pre-commit-config.yaml`.
+After that, DocDrift will run automatically before each commit.
 
-## Project layout
+You can also use the included `.pre-commit-config.yaml` if you prefer `pre-commit`.
+
+## When To Use It
+
+DocDrift is most useful if your repo has:
+
+- a README with code examples
+- `/docs` content tied to implementation
+- public APIs or SDK usage docs
+- fast-moving code where docs often drift
+- pull requests where reviewers care about docs accuracy
+
+## Project Layout
 
 ```text
 docwatcher/
@@ -161,9 +213,47 @@ docwatcher/
 └── tests/
 ```
 
+## Troubleshooting
+
+### `docdrift: command not found`
+
+Try:
+
+```bash
+python -m docwatcher.cli commit
+```
+
+If that works, the package is installed but the CLI executable is not on your shell `PATH`.
+
+### No AI checks are happening
+
+Make sure you have either:
+- `GROQ_API_KEY` set, or
+- a local endpoint configured in `.docdrift/config.json`
+
+### No changed files found
+
+DocDrift checks staged changes, so stage your files first:
+
+```bash
+git add .
+```
+
+Then run:
+
+```bash
+docdrift commit
+```
+
 ## Development
 
-Run the package from source:
+If you are working from a cloned source checkout, install in editable mode:
+
+```bash
+python -m pip install -e .
+```
+
+Run from source:
 
 ```bash
 python -m docwatcher.cli check
@@ -178,3 +268,4 @@ python -m unittest discover -s tests
 ## License
 
 [MIT](LICENSE)
+```
