@@ -13,6 +13,8 @@ You rename a parameter, change a return value, remove a feature, or start raisin
 
 DocDrift catches that gap before you commit or merge.
 
+![Animation](https://github.com/user-attachments/assets/d45152c2-d7ec-4f13-99fd-0917a949454d)
+
 ## What It Does
 
 - Detects changed functions and classes from staged git diffs
@@ -43,7 +45,7 @@ That will:
 - flag stale or missing documentation
 - offer fixes interactively
 - let you commit after review
-![Animation](https://github.com/user-attachments/assets/d45152c2-d7ec-4f13-99fd-0917a949454d)
+
 
 ## AI Setup
 
