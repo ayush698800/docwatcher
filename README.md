@@ -43,6 +43,7 @@ That will:
 - flag stale or missing documentation
 - offer fixes interactively
 - let you commit after review
+![Animation](https://github.com/user-attachments/assets/d45152c2-d7ec-4f13-99fd-0917a949454d)
 
 ## AI Setup
 
@@ -268,4 +269,4 @@ python -m unittest discover -s tests
 ## License
 
 [MIT](LICENSE)
-```
+
